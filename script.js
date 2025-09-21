@@ -425,10 +425,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// 현재 화면 캡쳐 기능
+// 오프스크린 컨테이너에 최적화된 스타일을 적용하는 함수
+function createOptimizedOffscreenElement(activeScreen) {
+    // 오프스크린 컨테이너 생성
+    const container = document.createElement('div');
+    container.style.cssText = `
+        position: fixed;
+        top: -10000px;
+        left: 0;
+        width: 375px;
+        height: 667px;
+        background: #000;
+        overflow: hidden;
+        z-index: -9999;
+        font-family: 'Arial', sans-serif;
+    `;
+
+    // 활성 화면 복제
+    const clonedScreen = activeScreen.cloneNode(true);
+
+    // 복제된 화면에서 캡쳐 버튼 제거
+    const captureBtn = clonedScreen.querySelector('.capture-button');
+    if (captureBtn) {
+        captureBtn.remove();
+    }
+
+    // 스타일 최적화 적용
+    optimizeClonedStyles(clonedScreen);
+
+    container.appendChild(clonedScreen);
+    document.body.appendChild(container);
+
+    return container;
+}
+
+// 복제된 요소의 스타일을 캡쳐에 최적화하는 함수
+function optimizeClonedStyles(clonedScreen) {
+    // 애니메이션 제거 및 투명도 정규화
+    const elementsToOptimize = [
+        { selector: '.question-container', styles: { opacity: '1', animation: 'none', transform: 'translateY(0)' } },
+        { selector: '.result-container', styles: { opacity: '1', animation: 'none', transform: 'translateY(0)' } },
+        { selector: '.intro-content', styles: { opacity: '1', animation: 'none' } },
+        { selector: '.user-info-content', styles: { opacity: '1', animation: 'none' } },
+        { selector: '.title-content', styles: { opacity: '1', animation: 'none' } }
+    ];
+
+    elementsToOptimize.forEach(config => {
+        const element = clonedScreen.querySelector(config.selector);
+        if (element) {
+            Object.entries(config.styles).forEach(([property, value]) => {
+                element.style.setProperty(property, value, 'important');
+            });
+        }
+    });
+
+    // 모든 하위 요소의 애니메이션 제거
+    const allElements = clonedScreen.querySelectorAll('*');
+    allElements.forEach(el => {
+        el.style.setProperty('animation', 'none', 'important');
+        el.style.setProperty('transition', 'none', 'important');
+    });
+}
+
+// 캡쳐할 컨텐츠 영역 찾기
+function findCaptureTarget(container) {
+    // 우선순위: question-container > result-container > story-content > intro-content > user-info-content > title-content > 전체
+    const selectors = [
+        '.question-container',
+        '.result-container',
+        '.story-content',
+        '.intro-content',
+        '.user-info-content',
+        '.title-content'
+    ];
+
+    for (const selector of selectors) {
+        const element = container.querySelector(selector);
+        if (element) {
+            return element;
+        }
+    }
+
+    // 아무것도 찾지 못했다면 컨테이너 전체 반환
+    return container.firstElementChild || container;
+}
+
+// 현재 화면 캡쳐 기능 (오프스크린 방식)
 async function captureCurrentScreen() {
+    let offscreenContainer = null;
+
     try {
-        console.log('화면 캡쳐 시작...');
+        console.log('화면 캡쳐 시작 (오프스크린 방식)...');
 
         // 현재 활성화된 화면 찾기
         const activeScreen = document.querySelector('.screen.active');
@@ -437,57 +524,31 @@ async function captureCurrentScreen() {
             return;
         }
 
-        // 전체 활성 화면을 캡쳐 (단순화)
-        let captureTarget = activeScreen;
+        // 오프스크린 최적화된 요소 생성
+        offscreenContainer = createOptimizedOffscreenElement(activeScreen);
 
-        // 캡쳐 전 스타일 강제 설정 (임시)
-        const questionContainer = captureTarget.querySelector('.question-container');
-        const resultContainer = captureTarget.querySelector('.result-container');
-        const originalStyles = [];
+        // 렌더링 완료를 위한 대기
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // 질문 화면 처리
-        if (questionContainer) {
-            originalStyles.push({
-                element: questionContainer,
-                opacity: questionContainer.style.opacity || ''
-            });
-            questionContainer.style.setProperty('opacity', '1', 'important');
-        }
-
-        // 결과 화면 처리
-        if (resultContainer) {
-            originalStyles.push({
-                element: resultContainer,
-                opacity: resultContainer.style.opacity || ''
-            });
-            resultContainer.style.setProperty('opacity', '1', 'important');
-        }
+        // 컨텐츠 영역 찾기
+        const captureTarget = findCaptureTarget(offscreenContainer);
 
         // html2canvas로 캡쳐
         const canvas = await html2canvas(captureTarget, {
             backgroundColor: '#000',
-            scale: 1,
-            logging: true,
+            scale: 2,
+            logging: false,
             useCORS: true,
-            allowTaint: true,
-            letterRendering: true,
-            fontEmbedCSS: true,
-            ignoreElements: function(element) {
-                // 캡쳐 버튼은 제외
-                return element.classList && element.classList.contains('capture-button');
-            }
+            allowTaint: true
         });
 
         console.log('캡쳐 완료:', canvas.width + 'x' + canvas.height);
 
-        // 원본 스타일 복원
-        originalStyles.forEach(styleInfo => {
-            if (styleInfo.opacity) {
-                styleInfo.element.style.setProperty('opacity', styleInfo.opacity);
-            } else {
-                styleInfo.element.style.removeProperty('opacity');
-            }
-        });
+        // 오프스크린 컨테이너 정리
+        if (offscreenContainer && offscreenContainer.parentNode) {
+            document.body.removeChild(offscreenContainer);
+            offscreenContainer = null;
+        }
 
         // 워터마크 추가
         const ctx = canvas.getContext('2d');
@@ -516,15 +577,13 @@ async function captureCurrentScreen() {
     } catch (error) {
         console.error('캡쳐 중 오류:', error);
 
-        // 에러 발생 시에도 원본 스타일 복원
-        if (typeof originalStyles !== 'undefined') {
-            originalStyles.forEach(styleInfo => {
-                if (styleInfo.opacity) {
-                    styleInfo.element.style.setProperty('opacity', styleInfo.opacity);
-                } else {
-                    styleInfo.element.style.removeProperty('opacity');
-                }
-            });
+        // 에러 발생 시에도 오프스크린 컨테이너 정리
+        if (offscreenContainer && offscreenContainer.parentNode) {
+            try {
+                document.body.removeChild(offscreenContainer);
+            } catch (cleanupError) {
+                console.warn('오프스크린 컨테이너 정리 중 오류:', cleanupError);
+            }
         }
 
         showCaptureNotification('캡쳐 중 오류가 발생했습니다.');
