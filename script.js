@@ -424,3 +424,146 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+
+// 현재 화면 캡쳐 기능
+async function captureCurrentScreen() {
+    try {
+        console.log('화면 캡쳐 시작...');
+
+        // 현재 활성화된 화면 찾기
+        const activeScreen = document.querySelector('.screen.active');
+        if (!activeScreen) {
+            alert('캡쳐할 화면이 없습니다.');
+            return;
+        }
+
+        // 전체 활성 화면을 캡쳐 (단순화)
+        let captureTarget = activeScreen;
+
+        // 캡쳐 전 스타일 강제 설정 (임시)
+        const questionContainer = captureTarget.querySelector('.question-container');
+        const resultContainer = captureTarget.querySelector('.result-container');
+        const originalStyles = [];
+
+        // 질문 화면 처리
+        if (questionContainer) {
+            originalStyles.push({
+                element: questionContainer,
+                opacity: questionContainer.style.opacity || ''
+            });
+            questionContainer.style.setProperty('opacity', '1', 'important');
+        }
+
+        // 결과 화면 처리
+        if (resultContainer) {
+            originalStyles.push({
+                element: resultContainer,
+                opacity: resultContainer.style.opacity || ''
+            });
+            resultContainer.style.setProperty('opacity', '1', 'important');
+        }
+
+        // html2canvas로 캡쳐
+        const canvas = await html2canvas(captureTarget, {
+            backgroundColor: '#000',
+            scale: 1,
+            logging: true,
+            useCORS: true,
+            allowTaint: true,
+            letterRendering: true,
+            fontEmbedCSS: true,
+            ignoreElements: function(element) {
+                // 캡쳐 버튼은 제외
+                return element.classList && element.classList.contains('capture-button');
+            }
+        });
+
+        console.log('캡쳐 완료:', canvas.width + 'x' + canvas.height);
+
+        // 원본 스타일 복원
+        originalStyles.forEach(styleInfo => {
+            if (styleInfo.opacity) {
+                styleInfo.element.style.setProperty('opacity', styleInfo.opacity);
+            } else {
+                styleInfo.element.style.removeProperty('opacity');
+            }
+        });
+
+        // 워터마크 추가
+        const ctx = canvas.getContext('2d');
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.textAlign = 'right';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 1;
+        const watermarkText = 'MY MAGAZINE PORTFOLIO';
+        ctx.strokeText(watermarkText, canvas.width - 20, canvas.height - 20);
+        ctx.fillText(watermarkText, canvas.width - 20, canvas.height - 20);
+
+        // 이미지 다운로드
+        const dataURL = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.download = `화면캡쳐_${new Date().getTime()}.png`;
+        link.href = dataURL;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // 성공 알림
+        showCaptureNotification('화면이 성공적으로 저장되었습니다! 📸');
+
+    } catch (error) {
+        console.error('캡쳐 중 오류:', error);
+
+        // 에러 발생 시에도 원본 스타일 복원
+        if (typeof originalStyles !== 'undefined') {
+            originalStyles.forEach(styleInfo => {
+                if (styleInfo.opacity) {
+                    styleInfo.element.style.setProperty('opacity', styleInfo.opacity);
+                } else {
+                    styleInfo.element.style.removeProperty('opacity');
+                }
+            });
+        }
+
+        showCaptureNotification('캡쳐 중 오류가 발생했습니다.');
+    }
+}
+
+// 캡쳐 알림 메시지
+function showCaptureNotification(message) {
+    // 기존 알림 제거
+    const existing = document.querySelector('.capture-notification');
+    if (existing) existing.remove();
+
+    // 새 알림 생성
+    const notification = document.createElement('div');
+    notification.className = 'capture-notification';
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #4CAF50;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease;
+    `;
+
+    document.body.appendChild(notification);
+
+    // 3초 후 제거
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideUp 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+}
