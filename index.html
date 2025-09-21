@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY MAGAZINE PORTFOLIO</title>
+    <link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 인트로 화면 -->
+        <div id="intro-screen" class="screen active">
+            <div class="intro-content">
+                <h1>광고인지 알면서도 시간을 쓰는 것</h1>
+                <div class="intro-text">
+                    <p>화장품 브랜드가 퍼스널컬러를 테스트 해 줄때.</p>
+                    <p>여행사가 여행 유형을 알려줄 때.</p>
+                    <p>결론은 광고겠지만 그 과정이 나쁘지 않고 흥미로울 때.</p>
+                </div>
+                <button class="next-btn" onclick="nextScreen()">다음</button>
+            </div>
+        </div>
+
+        <!-- 사용자 정보 입력 화면 -->
+        <div id="user-info-screen" class="screen">
+            <div class="user-info-content">
+                <h1>테스트 시작 전<br>간단한 정보를 입력해주세요</h1>
+                <form id="user-info-form" class="user-form">
+                    <div class="input-group">
+                        <label for="user-name">이름</label>
+                        <input type="text" id="user-name" name="userName" placeholder="이름을 입력해주세요" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="user-phone">전화번호</label>
+                        <input type="tel" id="user-phone" name="userPhone" placeholder="010-0000-0000" required>
+                    </div>
+                    <button type="submit" class="submit-btn">테스트 시작하기</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 메인 타이틀 화면 -->
+        <div id="title-screen" class="screen">
+            <div class="title-content">
+                <h1>내게 맞는 잡지매칭 테스트</h1>
+                <h2>5가지 잡지 추천 포트폴리오</h2>
+                <button class="start-btn" onclick="startTest()">테스트 시작</button>
+            </div>
+        </div>
+
+        <!-- Instagram 스토리 스타일 테스트 화면 -->
+        <div id="test-screen" class="screen story-container">
+            <div class="story-header">
+                <div class="profile-info">
+                    <div class="profile-pic"></div>
+                    <span>magazine_streaming</span>
+                </div>
+                <div class="story-options">⋯</div>
+            </div>
+
+            <div class="story-content">
+                <div class="question-container">
+                    <div class="question-number">질문 <span id="current-question">1</span>/5</div>
+                    <h3 id="question-text">주말 여행, 드레스에서 나누기?</h3>
+
+                    <div class="options-container" id="options-container">
+                        <!-- 옵션들이 동적으로 생성됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-footer">
+                <button class="footer-btn">더 알아보기</button>
+            </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="screen story-container">
+            <div class="story-header">
+                <div class="profile-info">
+                    <div class="profile-pic"></div>
+                    <span>magazine_streaming</span>
+                </div>
+                <div class="story-options">⋯</div>
+            </div>
+
+            <div class="story-content">
+                <div class="result-container" id="capture-area">
+                    <div class="result-type">
+                        <h2 id="result-title">Ambitious</h2>
+                        <p id="result-description">성공도 슬럽고 야심도 차십니다.</p>
+                        <p>당신의 키리어를 진화시킬 5권의 매거진.</p>
+                    </div>
+
+                    <div class="magazine-recommendation">
+                        <div class="magazine-cover" id="magazine-cover">
+                            <!-- 잡지 표지 이미지 -->
+                        </div>
+                    </div>
+
+                    <div class="subscription-info">
+                        <h3>지금 바로<br>72시간<br>무료체험</h3>
+                        <p>moazine</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-footer">
+                <button class="footer-btn">더 알아보기</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js?v=7"></script>
+</body>
+</html>
