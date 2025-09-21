@@ -1,4 +1,17 @@
-// 테스트 데이터
+/*
+====================================================================
+MOAZINE MMP - Magazine Matching Portfolio
+Instagram 스토리 스타일의 잡지 매칭 테스트 웹앱
+====================================================================
+*/
+
+// ============================================================================
+// 데이터 정의
+// ============================================================================
+
+/**
+ * 테스트 질문 및 결과 데이터
+ */
 const testData = {
     questions: [
         {
@@ -131,13 +144,42 @@ const testData = {
     }
 };
 
-// 현재 상태
-let currentScreen = 'intro';
-let currentQuestionIndex = 0;
-let userAnswers = [];
-let userInfo = {};
+// ============================================================================
+// 전역 상태 관리
+// ============================================================================
 
-// 화면 전환 함수
+/**
+ * 현재 활성화된 화면 ID
+ */
+let currentScreen = 'intro';
+
+/**
+ * 현재 진행 중인 질문의 인덱스 (0부터 시작)
+ */
+let currentQuestionIndex = 0;
+
+/**
+ * 사용자의 답변을 저장하는 배열
+ * 각 요소는 선택된 옵션의 인덱스 (0-4)
+ */
+let userAnswers = [];
+
+/**
+ * 사용자 정보 (이름, 전화번호)
+ */
+let userData = {
+    name: '',
+    phone: ''
+};
+
+// ============================================================================
+// 화면 네비게이션 함수들
+// ============================================================================
+
+/**
+ * 지정된 화면으로 전환
+ * @param {string} screenId - 전환할 화면의 ID
+ */
 function showScreen(screenId) {
     // 모든 화면 숨기기
     document.querySelectorAll('.screen').forEach(screen => {
@@ -152,12 +194,22 @@ function showScreen(screenId) {
     }
 }
 
-// 다음 화면으로 이동
+/**
+ * 다음 화면(사용자 정보 입력)으로 이동
+ */
 function nextScreen() {
     showScreen('user-info-screen');
 }
 
-// 전화번호 포맷팅
+// ============================================================================
+// 사용자 입력 처리 함수들
+// ============================================================================
+
+/**
+ * 전화번호 형식을 자동으로 포맷팅 (010-0000-0000)
+ * @param {string} value - 입력된 전화번호 문자열
+ * @returns {string} 포맷팅된 전화번호
+ */
 function formatPhoneNumber(value) {
     const numbers = value.replace(/[^\d]/g, '');
     if (numbers.length <= 3) {
@@ -170,6 +222,12 @@ function formatPhoneNumber(value) {
 }
 
 // 입력 유효성 검사
+/**
+ * 사용자 입력 정보의 유효성을 검사
+ * @param {string} name - 사용자 이름
+ * @param {string} phone - 사용자 전화번호
+ * @returns {Object} 검사 결과 객체 {isValid: boolean, errors: Object}
+ */
 function validateUserInfo(name, phone) {
     const errors = {};
 
@@ -220,18 +278,26 @@ function clearError(inputId) {
     }
 }
 
-// 사용자 정보 저장 및 다음 단계
+/**
+ * 사용자 정보를 저장하고 다음 단계로 진행
+ * @param {string} name - 사용자 이름
+ * @param {string} phone - 사용자 전화번호
+ */
 function saveUserInfoAndProceed(name, phone) {
-    userInfo = {
-        name: name.trim(),
-        phone: phone
-    };
+    userData.name = name.trim();
+    userData.phone = phone;
 
-    console.log('사용자 정보 저장:', userInfo);
+    console.log('사용자 정보 저장:', userData);
     showScreen('title-screen');
 }
 
-// 테스트 시작
+// ============================================================================
+// 테스트 로직 함수들
+// ============================================================================
+
+/**
+ * 테스트를 시작하고 첫 번째 질문으로 이동
+ */
 function startTest() {
     currentQuestionIndex = 0;
     userAnswers = [];
@@ -239,7 +305,9 @@ function startTest() {
     displayQuestion();
 }
 
-// 질문 표시
+/**
+ * 현재 질문을 화면에 표시
+ */
 function displayQuestion() {
     const question = testData.questions[currentQuestionIndex];
     document.getElementById('current-question').textContent = currentQuestionIndex + 1;
@@ -258,6 +326,10 @@ function displayQuestion() {
 }
 
 // 옵션 선택
+/**
+ * 옵션 선택 처리 및 다음 질문으로 진행
+ * @param {number} optionIndex - 선택된 옵션의 인덱스 (0-4)
+ */
 function selectOption(optionIndex) {
     // 이전 선택 제거
     document.querySelectorAll('.option-btn').forEach(btn => {
@@ -425,7 +497,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// 오프스크린 컨테이너에 최적화된 스타일을 적용하는 함수
+// ============================================================================
+// 화면 캡쳐 기능
+// ============================================================================
+
+/**
+ * 오프스크린 컨테이너에 최적화된 스타일을 적용하는 함수
+ * @param {HTMLElement} activeScreen - 현재 활성화된 화면 요소
+ * @returns {HTMLElement} 최적화된 오프스크린 컨테이너
+ */
 function createOptimizedOffscreenElement(activeScreen) {
     // 오프스크린 컨테이너 생성
     const container = document.createElement('div');
